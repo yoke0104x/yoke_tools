@@ -366,21 +366,4 @@ type TreeHandlerType = {
 };
 declare const treeHandler: Omit<TreeHandlerType, "_insert">;
 
-type treeTools_DefaultConfigType = DefaultConfigType;
-type treeTools_TreeHandlerType = TreeHandlerType;
-declare namespace treeTools {
-  export { type treeTools_DefaultConfigType as DefaultConfigType, type treeTools_TreeHandlerType as TreeHandlerType, treeHandler as default };
-}
-
-declare const type: string;
-type User = {
-    id: number;
-    name: string;
-    grades: string;
-};
-declare function getUserInfo(value: number): User | undefined;
-declare function getUserInfo(value: string): User[];
-declare const add: (a: number, b: number) => number;
-declare const minus: (a: number, b: number) => number;
-
-export { Calculator, type CalculatorImpl, type DefaultConfigType, type TreeHandlerType, add, getUserInfo, minus, treeTools as treeHandler, type };
+export { Calculator, type CalculatorImpl, type DefaultConfigType, type TreeHandlerType, treeHandler };

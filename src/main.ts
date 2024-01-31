@@ -5,6 +5,5 @@
  */
 export { type CalculatorImpl, Calculator } from "./calculationClass";
 
-export { type DefaultConfigType, type TreeHandlerType } from "./treeTools"
+export { type DefaultConfigType, type TreeHandlerType, treeHandler } from "./treeTools"
 
-export { treeHandler } from "./treeTools"

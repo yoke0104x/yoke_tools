@@ -4023,7 +4023,7 @@
    * y {number|string|Decimal}
    *
    */
-  function add$1(x, y) {
+  function add(x, y) {
     return new this(x).plus(y);
   }
 
@@ -4406,7 +4406,7 @@
     Decimal.abs = abs;
     Decimal.acos = acos;
     Decimal.acosh = acosh;        // ES6
-    Decimal.add = add$1;
+    Decimal.add = add;
     Decimal.asin = asin;
     Decimal.asinh = asinh;        // ES6
     Decimal.atan = atan;
@@ -5298,36 +5298,7 @@
     return obj;
   } });
 
-  var treeTools = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    default: treeHandler
-  });
-
-  var type = "1";
-  var userList = [];
-  function getUserInfo(value) {
-    if (typeof value === "number") {
-      return userList.find(function(item) {
-        return item.id === value;
-      });
-    } else {
-      return userList.filter(function(item) {
-        return item.grades === value;
-      });
-    }
-  }
-  var add = function(a, b) {
-    return a + b;
-  };
-  var minus = function(a, b) {
-    return a - b;
-  };
-
   exports.Calculator = Calculator;
-  exports.add = add;
-  exports.getUserInfo = getUserInfo;
-  exports.minus = minus;
-  exports.treeHandler = treeTools;
-  exports.type = type;
+  exports.treeHandler = treeHandler;
 
 }));
