@@ -16,32 +16,32 @@ const DEFAULT_CONFIG: DefaultConfigType = {
 
 export type TreeHandlerType = {
     // 列表结构转树结构
-    fromList: <T extends any>(list: T[], config?: Partial<DefaultConfigType>) => any[];
+    fromList: <T extends Record<string, any>>(list: T[], config?: Partial<DefaultConfigType>) => T[];
     // 树结构转列表结构
-    toList: <T extends any>(tree: T[], config?: Partial<DefaultConfigType>) => any[];
+    toList: <T extends Record<string, any>>(tree: T[], config?: Partial<DefaultConfigType>) => T[];
     // 查找符合条件的单个节点
-    findNode: <T extends any[]>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) => any;
+    findNode: <T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>) => T | null;
     // 查找符合条件的所有节点
-    findNodeAll: <T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) => any[];
+    findNodeAll: <T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>) => T[];
     // 查找符合条件的单个节点的路径
-    findPath: <T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) => any;
+    findPath: <T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>) => T[] | null;
     // 查找符合条件的所有节点的路径
-    findPathAll: <T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) => any;
+    findPathAll: <T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>) => T[][];
     // 树结构筛选
-    filter: <T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) => any;
+    filter: <T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>) => T[];
     // 树结构遍
-    forEach: <T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) => void;
+    forEach: <T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>) => void;
     // 在指定oldNode前插入newNode
-    insertBefore: <T extends any>(tree: T[], newNode: any, oldNode: any, config?: Partial<DefaultConfigType>) => void;
+    insertBefore: <T extends Record<string, any>>(tree: T[], newNode: T, oldNode: any, config?: Partial<DefaultConfigType>) => void;
     // 在指定oldNode后插入newNode
-    insertAfter: <T extends any>(tree: T[], newNode: any, oldNode: any, config?: Partial<DefaultConfigType>) => void;
+    insertAfter: <T extends Record<string, any>>(tree: T[], newNode: T, oldNode: any, config?: Partial<DefaultConfigType>) => void;
     // 删除符合条件的所有节点
-    removeNode: <T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) => void;
+    removeNode: <T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>) => void;
     // 创建实例
-    createInstance: (config: DefaultConfigType) => TreeHandlerType;
+    createInstance: (config: Partial<DefaultConfigType>) => TreeHandlerType;
 
     // 辅助方法
-    _insert: (tree: any[], node: any, targetNode: any, config: any, after: any) => void;
+    _insert: <T>(tree: T[], node: T, targetNode: T, config: DefaultConfigType, after: number) => void;
 }
 
 /**
@@ -59,16 +59,16 @@ const tools: Omit<TreeHandlerType, "createInstance"> = {
      * @param config 
      * @returns 
      */
-    fromList<T extends any>(list: T[], config?: Partial<DefaultConfigType>) {
-        config = getConfig(config ?? {})
-        const nodeMap = new Map(), result: any = [], { id, children, pid } = config as DefaultConfigType
+    fromList<T extends Record<string, any>>(list: T[], config?: Partial<DefaultConfigType>): T[] {
+        config = getConfig(config || {})
+        const nodeMap = new Map<any, T>(), result: T[] = [], { id, children, pid } = config as DefaultConfigType
         for (const node of list) {
-            (node as any)[children] = (node as any)[children] || [] as any[]
-            nodeMap.set((node as any)[id], node)
+            (node[children] as T[] | undefined) = node[children] || [];
+            nodeMap.set(node[id], node)
         }
         for (const node of list) {
-            const parent = nodeMap.get((node as any)[pid])
-                ; (parent ? parent.children : result).push(node)
+            const parent = nodeMap.get(node[pid])
+                ; (parent ? parent[children] : result).push(node)
         }
         return result
     },
@@ -79,14 +79,17 @@ const tools: Omit<TreeHandlerType, "createInstance"> = {
      * @param config 
      * @returns 
      */
-    toList<T extends any>(tree: T[], config?: Partial<DefaultConfigType>) {
+    toList<T extends Record<string, any>>(tree: T[], config?: Partial<DefaultConfigType>): T[] {
         config = getConfig(config ?? {})
-        const { children } = config as DefaultConfigType, result: any[] = [...tree]
+        const { children } = config as DefaultConfigType, result: T[] = [...tree]
         for (let i = 0; i < result.length; i++) {
             if (!result[i][children]) continue
             result.splice(i + 1, 0, ...result[i][children])
         }
-        return result
+        return result?.map(el => {
+            delete el[children]
+            return el
+        })
     },
 
     /**
@@ -96,12 +99,12 @@ const tools: Omit<TreeHandlerType, "createInstance"> = {
      * @param config 
      * @returns 
      */
-    findNode<T extends any[]>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) {
+    findNode<T extends Record<string, any>>(list: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>): T | null {
         config = getConfig(config ?? {})
-        const { children } = config as DefaultConfigType, list = [...tree as any]
+        const { children } = config as DefaultConfigType
         for (let node of list) {
-            if (func(node)) return node as any
-            (node as any)[children as keyof typeof node] && list.push(...(node as any)[children as keyof typeof node])
+            if (func(node)) return node;
+            node[children] && list.push(...node[children])
         }
         return null
     },
@@ -113,12 +116,12 @@ const tools: Omit<TreeHandlerType, "createInstance"> = {
      * @param config 
      * @returns 
      */
-    findNodeAll<T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) {
+    findNodeAll<T extends Record<string, any>>(list: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>): T[] {
         config = getConfig(config ?? {})
-        const { children } = config, list = [...tree], result: any = []
+        const { children } = config as DefaultConfigType, result: T[] = []
         for (let node of list) {
-            func(node) && result.push(node)
-                (node as any)[children as keyof typeof node] && list.push(...(node as any)[children as keyof typeof node])
+            func(node) && result.push(node);
+            node[children] && list.push(...node[children])
         }
         return result
     },
@@ -130,9 +133,9 @@ const tools: Omit<TreeHandlerType, "createInstance"> = {
      * @param config 
      * @returns 
      */
-    findPath<T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) {
+    findPath<T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>): T[] | null {
         config = getConfig(config ?? {})
-        const path = [], list = [...tree], visitedSet: Set<any> = new Set(), { children } = config
+        const path: T[] = [], list = [...tree as T[]], visitedSet = new Set<T>(), { children } = config as DefaultConfigType
         while (list.length) {
             const node = list[0]
             if (visitedSet.has(node)) {
@@ -140,7 +143,7 @@ const tools: Omit<TreeHandlerType, "createInstance"> = {
                 list.shift()
             } else {
                 visitedSet.add(node);
-                (node as any)[children as keyof typeof node] && list.unshift(...(node as any)[children as keyof typeof node])
+                node[children] && list.unshift(...node[children])
                 path.push(node)
                 if (func(node)) return path
             }
@@ -155,10 +158,10 @@ const tools: Omit<TreeHandlerType, "createInstance"> = {
      * @param config 
      * @returns 
      */
-    findPathAll<T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) {
+    findPathAll<T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>): T[][] {
         config = getConfig(config ?? {})
-        const path = [], list = [...tree], result = []
-        const visitedSet = new Set(), { children } = config
+        const path: T[] = [], list = [...tree as T[]], result: T[][] = []
+        const visitedSet = new Set<T>(), { children } = config as DefaultConfigType
         while (list.length) {
             const node = list[0]
             if (visitedSet.has(node)) {
@@ -166,7 +169,7 @@ const tools: Omit<TreeHandlerType, "createInstance"> = {
                 list.shift()
             } else {
                 visitedSet.add(node);
-                (node as any)[children as keyof typeof node] && list.unshift(...(node as any)[children as keyof typeof node])
+                node[children] && list.unshift(...node[children])
                 path.push(node)
                 func(node) && result.push([...path])
             }
@@ -181,11 +184,11 @@ const tools: Omit<TreeHandlerType, "createInstance"> = {
      * @param config 
      * @returns 
      */
-    filter<T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) {
+    filter<T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>): T[] {
         config = getConfig(config ?? {})
         const { children } = config as DefaultConfigType
-        function listFilter(list: any) {
-            return list.map((node: any) => ({ ...node })).filter((node: any) => {
+        function listFilter(list: T[]): T[] {
+            return list.map((node: T & any) => ({ ...node })).filter((node: T & any) => {
                 node[children] = node[children] && listFilter(node[children])
                 return func(node) || (node[children] && node[children].length)
             })
@@ -194,17 +197,17 @@ const tools: Omit<TreeHandlerType, "createInstance"> = {
     },
 
     /**
-     * 树结构遍
+     * 树结构遍历
      * @param tree 
      * @param func 
      * @param config 
      */
-    forEach<T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) {
+    forEach<T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>): void {
         config = getConfig(config ?? {})
-        const list = [...tree], { children } = config as DefaultConfigType
+        const list = [...tree as T[]], { children } = config as DefaultConfigType
         for (let i = 0; i < list.length; i++) {
             func(list[i]);
-            (list[i] as any)[children] && list.splice(i + 1, 0, ...(list[i] as any)[children])
+            list[i][children] && list.splice(i + 1, 0, ...list[i][children])
         }
     },
 
@@ -216,12 +219,12 @@ const tools: Omit<TreeHandlerType, "createInstance"> = {
      * @param config 
      * @param after 
      */
-    _insert(tree: any[], node: any, targetNode: any, config: any, after: any) {
+    _insert<T>(tree: T[], node: T, targetNode: T, config: DefaultConfigType, after: number): void {
         config = getConfig(config)
-        const { children } = config
-        function insert(list: any) {
+        const { children } = config as DefaultConfigType
+        function insert(list: T[]) {
             let idx = list.indexOf(node)
-            idx < 0 ? list.forEach((n: any) => insert(n[children] || [])) : list.splice(idx + after, 0, targetNode)
+            idx < 0 ? list.forEach((n: T & any) => insert(n[children] || [])) : list.splice(idx + after, 0, targetNode)
         }
         insert(tree)
     },
@@ -233,8 +236,8 @@ const tools: Omit<TreeHandlerType, "createInstance"> = {
      * @param oldNode 
      * @param config 
      */
-    insertBefore(tree: any[], newNode: any, oldNode: any, config?: Partial<DefaultConfigType>) {
-        tools._insert(tree, oldNode, newNode, config, 0)
+    insertBefore<T extends Record<string, any>>(tree: T[], newNode: T, oldNode: T, config?: Partial<DefaultConfigType>): void {
+        tools._insert<T>(tree, oldNode, newNode, config as DefaultConfigType, 0)
     },
 
     /**
@@ -244,8 +247,8 @@ const tools: Omit<TreeHandlerType, "createInstance"> = {
      * @param newNode 
      * @param config 
      */
-    insertAfter(tree: any[], newNode: any, oldNode: any, config?: Partial<DefaultConfigType>) {
-        tools._insert(tree, oldNode, newNode, config, 1)
+    insertAfter<T extends Record<string, any>>(tree: T[], newNode: T, oldNode: T, config?: Partial<DefaultConfigType>): void {
+        tools._insert(tree, oldNode, newNode, config as DefaultConfigType, 1)
     },
 
     /**
@@ -254,22 +257,22 @@ const tools: Omit<TreeHandlerType, "createInstance"> = {
      * @param func 
      * @param config 
      */
-    removeNode<T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) {
+    removeNode<T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>): void {
         config = getConfig(config ?? {})
         const { children } = config as DefaultConfigType, list = [tree]
         while (list.length) {
-            const nodeList: any = list.shift()
-            const delList = nodeList.reduce((r: any, n: any, idx: any) => (func(n) && r.push(idx), r), [])
+            const nodeList: T[] | undefined = list.shift()
+            const delList = nodeList!.reduce((r: any, n: T, idx: number) => (func(n) && r.push(idx), r), [])
             delList.reverse()
-            delList.forEach((idx: any) => nodeList.splice(idx, 1))
-            const childrenList = nodeList.map((n: any) => n[children]).filter((l: any) => l && l.length)
+            delList.forEach((idx: number) => nodeList!.splice(idx, 1))
+            const childrenList = nodeList!.map((n: T) => n[children]).filter((l: T) => l && l.length)
             list.push(...childrenList)
         }
     }
 
 }
 
-const makeHandlers = () => {
+const makeHandlers = (): Partial<TreeHandlerType> => {
     const obj: Partial<TreeHandlerType> = {}
     for (let key in tools) {
         const keyStr = key as keyof typeof tools
@@ -284,17 +287,17 @@ const handlers = makeHandlers()
 
 export const treeHandler: Omit<TreeHandlerType, "_insert"> = {
     ...handlers as TreeHandlerType,
-    createInstance(config: DefaultConfigType) {
-        const obj: any = {}
+    createInstance(config: Partial<DefaultConfigType>): TreeHandlerType {
+        const obj: Partial<TreeHandlerType> = {}
         for (const key in handlers) {
             const keyStr = key as keyof typeof handlers
-            const func = handlers[keyStr]
-            obj[keyStr] = (...args: any[]) => {
+            const func = handlers[keyStr];
+            (obj as any)[keyStr] = (...args: any[]) => {
                 if (typeof func === 'function') {
                     return (func as (node: any) => boolean)(...args as [], config)
                 }
             }
         }
-        return obj
+        return obj as TreeHandlerType;
     }
 }

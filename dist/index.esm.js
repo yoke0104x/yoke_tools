@@ -4896,17 +4896,20 @@ PI = new Decimal(PI);
 var Calculator = (
   /** @class */
   function() {
-    function Calculator2(initialValue) {
-      if (initialValue === void 0) {
-        initialValue = 0;
-      }
+    function Calculator2() {
       Object.defineProperty(this, "result", {
         enumerable: true,
         configurable: true,
         writable: true,
         value: void 0
       });
-      this.result = new Decimal(initialValue);
+      Object.defineProperty(this, "index", {
+        enumerable: true,
+        configurable: true,
+        writable: true,
+        value: 0
+      });
+      this.result = new Decimal(0);
     }
     Object.defineProperty(Calculator2.prototype, "add", {
       enumerable: false,
@@ -4918,8 +4921,9 @@ var Calculator = (
         for (var _i = 0; _i < arguments.length; _i++) {
           values[_i] = arguments[_i];
         }
+        this.index++;
         values.forEach(function(value) {
-          _this.result = _this.result.add(value);
+          _this.result = _this.result.plus(value);
         });
         return this;
       }
@@ -4934,8 +4938,9 @@ var Calculator = (
         for (var _i = 0; _i < arguments.length; _i++) {
           values[_i] = arguments[_i];
         }
+        this._setInitResut(values);
         values.forEach(function(value) {
-          _this.result = _this.result.sub(value);
+          _this.result = _this.result.minus(value);
         });
         return this;
       }
@@ -4950,8 +4955,9 @@ var Calculator = (
         for (var _i = 0; _i < arguments.length; _i++) {
           values[_i] = arguments[_i];
         }
+        this._setInitResut(values);
         values.forEach(function(value) {
-          _this.result = _this.result.mul(value);
+          _this.result = _this.result.times(value);
         });
         return this;
       }
@@ -4966,10 +4972,23 @@ var Calculator = (
         for (var _i = 0; _i < arguments.length; _i++) {
           values[_i] = arguments[_i];
         }
+        this._setInitResut(values);
         values.forEach(function(value) {
-          _this.result = _this.result.div(value);
+          _this.result = _this.result.dividedBy(value);
         });
         return this;
+      }
+    });
+    Object.defineProperty(Calculator2.prototype, "_setInitResut", {
+      enumerable: false,
+      configurable: true,
+      writable: true,
+      value: function(values) {
+        if (this.index === 0) {
+          this.result = this.result.plus(values[0]);
+          values.shift();
+        }
+        this.index++;
       }
     });
     Object.defineProperty(Calculator2.prototype, "getResult", {
@@ -5043,7 +5062,7 @@ var tools = {
    * @returns
    */
   fromList: function(list, config) {
-    config = getConfig(config !== null && config !== void 0 ? config : {});
+    config = getConfig(config || {});
     var nodeMap = /* @__PURE__ */ new Map(), result = [], _a = config, id = _a.id, children = _a.children, pid = _a.pid;
     for (var _i = 0, list_1 = list; _i < list_1.length; _i++) {
       var node = list_1[_i];
@@ -5053,7 +5072,7 @@ var tools = {
     for (var _b = 0, list_2 = list; _b < list_2.length; _b++) {
       var node = list_2[_b];
       var parent_1 = nodeMap.get(node[pid]);
-      (parent_1 ? parent_1.children : result).push(node);
+      (parent_1 ? parent_1[children] : result).push(node);
     }
     return result;
   },
@@ -5071,7 +5090,10 @@ var tools = {
         continue;
       result.splice.apply(result, __spreadArray([i + 1, 0], result[i][children], false));
     }
-    return result;
+    return result === null || result === void 0 ? void 0 : result.map(function(el) {
+      delete el[children];
+      return el;
+    });
   },
   /**
    * 查找符合条件的单个节点
@@ -5080,9 +5102,9 @@ var tools = {
    * @param config
    * @returns
    */
-  findNode: function(tree, func, config) {
+  findNode: function(list, func, config) {
     config = getConfig(config !== null && config !== void 0 ? config : {});
-    var children = config.children, list = __spreadArray([], tree, true);
+    var children = config.children;
     for (var _i = 0, list_3 = list; _i < list_3.length; _i++) {
       var node = list_3[_i];
       if (func(node))
@@ -5098,12 +5120,13 @@ var tools = {
    * @param config
    * @returns
    */
-  findNodeAll: function(tree, func, config) {
+  findNodeAll: function(list, func, config) {
     config = getConfig(config !== null && config !== void 0 ? config : {});
-    var children = config.children, list = __spreadArray([], tree, true), result = [];
+    var children = config.children, result = [];
     for (var _i = 0, list_4 = list; _i < list_4.length; _i++) {
       var node = list_4[_i];
-      func(node) && result.push(node)(node)[children] && list.push.apply(list, node[children]);
+      func(node) && result.push(node);
+      node[children] && list.push.apply(list, node[children]);
     }
     return result;
   },
@@ -5178,7 +5201,7 @@ var tools = {
     return listFilter(tree);
   },
   /**
-   * 树结构遍
+   * 树结构遍历
    * @param tree
    * @param func
    * @param config
@@ -5292,4 +5315,4 @@ var treeHandler = __assign(__assign({}, handlers), { createInstance: function(co
   return obj;
 } });
 
-export { Calculator, treeHandler };
+export { Calculator, Decimal, treeHandler };

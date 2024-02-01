@@ -35,7 +35,6 @@ export default defineConfig([
                 format: 'umd',
                 file: path.resolve(__dirname, './dist/index.min.js'),
                 plugins: [terser()],
-                sourcemap: true,
                 exports: 'named',
             },
             {

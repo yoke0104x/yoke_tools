@@ -303,10 +303,10 @@ declare class Decimal {
  */
 interface CalculatorImpl {
     result: Decimal;
-    add: (...values: string[]) => CalculatorImpl;
-    subtract: (...values: string[]) => CalculatorImpl;
-    multiply: (...values: string[]) => CalculatorImpl;
-    divide: (...values: string[]) => CalculatorImpl;
+    add: (...values: Decimal.Value[]) => CalculatorImpl;
+    subtract: (...values: Decimal.Value[]) => CalculatorImpl;
+    multiply: (...values: Decimal.Value[]) => CalculatorImpl;
+    divide: (...values: Decimal.Value[]) => CalculatorImpl;
     getResult: () => string;
 }
 /**
@@ -315,33 +315,35 @@ interface CalculatorImpl {
  * @returns
  */
 declare class Calculator implements CalculatorImpl {
-    result: any;
-    constructor(initialValue?: number);
+    result: Decimal;
+    private index;
+    constructor();
     /**
      * 加法
      * @param values
      * @returns
      */
-    add(...values: string[]): this;
+    add(...values: Decimal.Value[]): this;
     /**
      * 减法
      * @param values
      * @returns
      */
-    subtract(...values: string[]): this;
+    subtract(...values: Decimal.Value[]): this;
     /**
      * 乘法
      * @param values
      * @returns
      */
-    multiply(...values: string[]): this;
+    multiply(...values: Decimal.Value[]): this;
     /**
      * 除法
      * @param values
      * @returns
      */
-    divide(...values: string[]): this;
-    getResult(): any;
+    divide(...values: Decimal.Value[]): this;
+    _setInitResut(values: Decimal.Value[]): void;
+    getResult(): string;
 }
 
 type DefaultConfigType = {
@@ -350,20 +352,20 @@ type DefaultConfigType = {
     pid: string;
 };
 type TreeHandlerType = {
-    fromList: <T extends any>(list: T[], config?: Partial<DefaultConfigType>) => any[];
-    toList: <T extends any>(tree: T[], config?: Partial<DefaultConfigType>) => any[];
-    findNode: <T extends any[]>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) => any;
-    findNodeAll: <T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) => any[];
-    findPath: <T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) => any;
-    findPathAll: <T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) => any;
-    filter: <T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) => any;
-    forEach: <T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) => void;
-    insertBefore: <T extends any>(tree: T[], newNode: any, oldNode: any, config?: Partial<DefaultConfigType>) => void;
-    insertAfter: <T extends any>(tree: T[], newNode: any, oldNode: any, config?: Partial<DefaultConfigType>) => void;
-    removeNode: <T extends any>(tree: T[], func: (node: any) => boolean, config?: Partial<DefaultConfigType>) => void;
-    createInstance: (config: DefaultConfigType) => TreeHandlerType;
-    _insert: (tree: any[], node: any, targetNode: any, config: any, after: any) => void;
+    fromList: <T extends Record<string, any>>(list: T[], config?: Partial<DefaultConfigType>) => T[];
+    toList: <T extends Record<string, any>>(tree: T[], config?: Partial<DefaultConfigType>) => T[];
+    findNode: <T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>) => T | null;
+    findNodeAll: <T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>) => T[];
+    findPath: <T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>) => T[] | null;
+    findPathAll: <T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>) => T[][];
+    filter: <T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>) => T[];
+    forEach: <T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>) => void;
+    insertBefore: <T extends Record<string, any>>(tree: T[], newNode: T, oldNode: any, config?: Partial<DefaultConfigType>) => void;
+    insertAfter: <T extends Record<string, any>>(tree: T[], newNode: T, oldNode: any, config?: Partial<DefaultConfigType>) => void;
+    removeNode: <T extends Record<string, any>>(tree: T[], func: (node: T) => boolean, config?: Partial<DefaultConfigType>) => void;
+    createInstance: (config: Partial<DefaultConfigType>) => TreeHandlerType;
+    _insert: <T>(tree: T[], node: T, targetNode: T, config: DefaultConfigType, after: number) => void;
 };
 declare const treeHandler: Omit<TreeHandlerType, "_insert">;
 
-export { Calculator, type CalculatorImpl, type DefaultConfigType, type TreeHandlerType, treeHandler };
+export { Calculator, type CalculatorImpl, Decimal, type DefaultConfigType, type TreeHandlerType, treeHandler };

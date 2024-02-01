@@ -11,13 +11,13 @@ import Decimal from 'decimal.js';
 export interface CalculatorImpl {
     result: Decimal;
     // 加法
-    add: (...values: string[]) => CalculatorImpl;
+    add: (...values: Decimal.Value[]) => CalculatorImpl;
     // 减法
-    subtract: (...values: string[]) => CalculatorImpl;
+    subtract: (...values: Decimal.Value[]) => CalculatorImpl;
     // 乘法
-    multiply: (...values: string[]) => CalculatorImpl;
+    multiply: (...values: Decimal.Value[]) => CalculatorImpl;
     // 除法
-    divide: (...values: string[]) => CalculatorImpl;
+    divide: (...values: Decimal.Value[]) => CalculatorImpl;
     // 获取结果
     getResult: () => string;
 }
@@ -28,20 +28,20 @@ export interface CalculatorImpl {
  * @returns 
  */
 export class Calculator implements CalculatorImpl {
-    public result: any;
-
-    constructor(initialValue: number = 0) {
-        this.result = new Decimal(initialValue);
+    public result: Decimal;
+    private index: number = 0;
+    constructor() {
+        this.result = new Decimal(0);
     }
-
     /**
      * 加法
      * @param values
      * @returns
      */
-    add(...values: string[]) {
+    add(...values: Decimal.Value[]) {
+        this.index++;
         values.forEach((value) => {
-            this.result = this.result.add(value);
+            this.result = this.result.plus(value);
         });
         return this;
     }
@@ -51,9 +51,10 @@ export class Calculator implements CalculatorImpl {
      * @param values
      * @returns
      */
-    subtract(...values: string[]) {
+    subtract(...values: Decimal.Value[]) {
+        this._setInitResut(values);
         values.forEach((value) => {
-            this.result = this.result.sub(value);
+            this.result = this.result.minus(value);
         });
         return this;
     }
@@ -63,9 +64,10 @@ export class Calculator implements CalculatorImpl {
      * @param values
      * @returns
      */
-    multiply(...values: string[]) {
+    multiply(...values: Decimal.Value[]) {
+        this._setInitResut(values);
         values.forEach((value) => {
-            this.result = this.result.mul(value);
+            this.result = this.result.times(value);
         });
         return this;
     }
@@ -75,11 +77,21 @@ export class Calculator implements CalculatorImpl {
      * @param values
      * @returns
      */
-    divide(...values: string[]) {
+    divide(...values: Decimal.Value[]) {
+        this._setInitResut(values);
         values.forEach((value) => {
-            this.result = this.result.div(value);
+            this.result = this.result.dividedBy(value);
         });
         return this;
+    }
+
+    _setInitResut(values: Decimal.Value[]) {
+        // 第一次调用时，将第一个值赋值给result
+        if (this.index === 0) {
+            this.result = this.result.plus(values[0]);
+            values.shift();
+        }
+        this.index++;
     }
 
     getResult() {
