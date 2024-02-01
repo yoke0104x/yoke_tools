@@ -1,6 +1,6 @@
 {
   "name": "yoke_tools",
-  "version": "0.1.4",
+  "version": "0.1.8",
   "description": "yoke工具库",
   "main": "./dist/index.js",
   "exports": {
